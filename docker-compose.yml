@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+    db:
+        image: mysql
+        container_name: db
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        volumes:
+            -   ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        networks:
+            -   dev
+
+    phpmyadmin:
+        image: phpmyadmin
+        container_name: phpmyadmin
+        restart: always
+        depends_on:
+            -   db
+        ports:
+            -   8080:80
+        environment:
+            PMA_HOST: db
+        networks:
+            -   dev
+
+    server:
+        build: php-apache
+        container_name: server
+        ports:
+            -   8003:80
+        volumes:
+            -   ./php-apache/vhosts:/etc/apache2/sites-enabled
+        restart: always
+        depends_on:
+            -   db
+        networks:
+            -   dev
+networks:
+    dev:
+
+volumes:
+    db-data:
